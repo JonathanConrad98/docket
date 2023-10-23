@@ -1,0 +1,19 @@
+Package: docket
+Title: Automated Document Template Processing in R
+Version: 1.0
+Authors@R: 
+    person(given = "Jonathan", family = "Conrad", email = "JonathanGConrad@gmail.com", role = c("aut", "cre"))
+Description: Populate data from an R environment into .doc/.docx templates. Create a template document in a program such as Word, and insert a string encased in the « »  characters to flag the location (E.G: «FirstName», «LastName», «Address»). Use the getDictionary() to create a data frame containing flags and their corresponding values, then use docket() to replace the flags and create a new file containing data from the R environment.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports:
+	stringr,
+	XML,
+	xml2,
+	zip
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
