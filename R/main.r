@@ -35,6 +35,25 @@ check_file <- function(filename){
 }
 
 ##
+##Clean data to remove any non-basic Latin characters from directly adjacent to flag
+##
+removeNonLatin_Leading <- function(input_data, targetChar) {
+  char_check <- regmatches(input_data, gregexpr(paste0(".", targetChar), input_data)) #get all instances of start flag and immediate adjacent char
+  char_check <- unique(unlist(char_check)) #unique list of flag-char combinations
+  char_check <- char_check[grepl("^[\x01-\x7F]", substr(char_check, 1, 1)) == FALSE] #Issue characters
+  output_data <- input_data
+
+  if (length(char_check) > 0) {
+    for (i in 1:length(char_check)){
+      output_data <- str_replace_all(output_data, char_check[i], targetChar)
+    }
+    output_data <- removeNonLatin_Leading(output_data, targetChar)
+  }
+  return(output_data)
+}
+
+
+##
 ##Create temporary hold file for the data
 #
 unzip_file <- function(filename){
@@ -82,6 +101,10 @@ open_zipfile <- function(filename) {
   }
 
   docket_template <- XML::toString.XMLNode(XML::xmlParse(file = temp_dir_xml))
+
+  #Can be optimized by only being called if needed
+  docket_template <- removeNonLatin_Leading(docket_template, "\u00AB")
+  docket_template <- removeNonLatin_Leading(docket_template, "\u00BB")
   return(docket_template)
 }
 
@@ -222,7 +245,7 @@ docket <- function(filename, dictionary, outputName) {
 
   docket.dictionary.private <- getPrivateDictionary(zipfile_xml) #Creates a dictionary of the private flags
 
-  full_dictionary <- merge(docket.dictionary.private, dictionary, by = "flag", all.x=TRUE, all.y=TRUE) #Joins private dictionary with user dictionary
+  full_dictionary <- merge(docket.dictionary.private, dictionary, by = "flag", all.x=TRUE, all.y=FALSE) #Joins private dictionary with user dictionary
 
   #Replace NAs with blanks
   full_dictionary[,4] <- ifelse(is.na(full_dictionary[,4]), full_dictionary[,2], full_dictionary[,4])
