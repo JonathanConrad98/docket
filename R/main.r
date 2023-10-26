@@ -102,7 +102,6 @@ open_zipfile <- function(filename) {
 
   docket_template <- XML::toString.XMLNode(XML::xmlParse(file = temp_dir_xml))
 
-  #Can be optimized by only being called if needed
   docket_template <- removeNonLatin_Leading(docket_template, "\u00AB")
   docket_template <- removeNonLatin_Leading(docket_template, "\u00BB")
   return(docket_template)
@@ -238,6 +237,7 @@ docket <- function(filename, dictionary, outputName) {
   }
 
   old_wd <- getwd()
+  on.exit(setwd(old_wd))
 
   temp_dir <- paste0(filename, "_dockettemp") #Temp directory for holding files
 
@@ -265,7 +265,7 @@ docket <- function(filename, dictionary, outputName) {
   write_xml(as_xml_document(zipfile_xml), paste0(temp_dir, "/word/document.xml"))
 
   setwd(temp_dir)
-  zip(zipfile = outputName, files = list.files(), recurse = TRUE)
+  zip(zipfile = outputName, files = list.files(), include_directories = FALSE)
   setwd(old_wd)
   close_unzip_file(filename)
 }
