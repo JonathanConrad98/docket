@@ -1,12 +1,3 @@
----
-title: "A Guide to the docket Package"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{docket_guide}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
 # Introduction
 
 The 'docket' package is designed to streamline document creation by allowing users to populate data from an R environment into templates created in third-party software such as 'Microsoft Word'.
