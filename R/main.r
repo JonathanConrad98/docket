@@ -136,21 +136,27 @@ get_flags_raw <- function(content_extract) {
   return(matches)
 }
 
-#' Create an empty dictionary from the flags in a document template
+#' @title Create a dictionary
 #'
-#' @description Scans the input file for strings enclosed by flag wings: « »
+#' @description Scans the input file for strings enclosed by flag wings: « », then creates an empty dictionary with corresponding
+#' replacement values for each flag.
 #'
 #' @param filename The file path to the document template. Supports .doc and .docx
-#' @return A two-column data frame intended for populating data into the template:
-#' \itemize{
-#'   \item \strong{flag}: Lists all the flags identified in the document.
-#'   \item \strong{replace values}: An empty column where users can insert values to replace the corresponding flags in the template.
-#' }
+#' @return A data frame where each row represents a flag in the template document and its replacement value
+#' @examples
+#'
+#' # Path to the sample template file included in the package
+#' template_path <- system.file("template_document", "Template.docx", package="docket")
+#'
+#' # Create a dictionary by using the getDictionary function on the sample template file
+#' result <- getDictionary(template_path)
+#' print(result)
+#'
 #' @export
 getDictionary <- function(filename) {
   content_extract <- open_zipfile(filename) #open the document zip file
+  on.exit(close_unzip_file(filename)) #Removes temp file
   flag <- get_flags(content_extract) #Get the cleaned flags
-  close_unzip_file(filename) #Close the document zip file
 
   #Create a dataframe of the unique flags
   docket.dictionary.public <- data.frame('flag' = unique(flag),
@@ -160,15 +166,36 @@ getDictionary <- function(filename) {
 }
 
 
-#' Check if dictionary meets specific requirements.
+#' @title Check if dictionary meets specific requirements.
 #'
 #' @description Verifies that the input dictionary meets the following conditions
-#' 1. It is a two-column dataframe
-#' 2. Column 1 is named "flag"
-#' 3. Column 1 contains flags without starting and ending wings: « »
+#' #' \itemize{
+#'   \item \strong{1.} It is a two-column data frame
+#'   \item \strong{2.} Column 1 is named "flag"
+#'   \item \strong{3.} Column 1 contains flags with starting and ending wings: « »
+#'   }
 #'
-#' @param dictionary A data frame intended for feeding into the template. It should be structured according to the described conditions
-#' @return Logical. Returns 'TRUE' if the dictionary meets requirements for processing. Returns false otherwise
+#' @param dictionary A data frame where each row represents a flag in the template document and its replacement value
+#' @return Logical. Returns 'TRUE' if the dictionary meets requirements for processing. Returns 'FALSE' otherwise
+#' @examples
+#' # Path to the sample template included in the package
+#' template_path <- system.file("template_document", "Template.docx", package="docket")
+#'
+#' # Create a dictionary by using the getDictionary function on the sample template file
+#' result <- getDictionary(template_path)
+#'
+#' # Insert data into the template dictionary
+#' result[1,2] <- Sys.getenv("USERNAME") #Author name
+#' result[2,2] <- as.character(Sys.Date()) # Date report created
+#' result[3,2] <- 123
+#' result[4,2] <- 456
+#' result[5,2] <- 789
+#' result[6,2] <- sum(as.numeric(result[3:5,2]))
+#'
+#' # Verify that the result dictionary is valid
+#' if (checkDictionary(result) == TRUE) {
+#'   print("Valid Dictionary")
+#' }
 #' @export
 checkDictionary <- function(dictionary){
   if (is.data.frame(dictionary) == FALSE){
@@ -221,15 +248,38 @@ getPrivateDictionary <- function(xml_data){
 }
 
 
-#' Replace flags in template document with data from R environment
+#' Create documents
 #
-#' @description Scans the input .doc or .docx file for specified flags, as defined in the dictionary,
-#' and replaces them with corresponding data. The edited content is then saved to a new document.
+#' @description Scans the input template file for specified flags as defined in the dictionary,
+#' and replaces them with corresponding data. The edited content is then saved to a new document
 #'
-#' @param filename The file path to the document template. Supports .doc and .docx formats
-#' @param dictionary A data frame where each row represents a flag in the document
+#' @param filename The file path to the document template
+#' @param dictionary A data frame where each row represents a flag in the template document and its replacement value
 #' @param outputName The file path and name for the saved output document
 #' @return Generates a new .doc or .docx file with the flags replaced by the specified data
+#' @examples
+#' # Path to the sample template included in the package
+#' template_path <- system.file("template_document", "Template.docx", package="docket")
+#' output_path <- paste0(dirname(template_path), "/output document.docx")
+#'
+#' # Create a dictionary by using the getDictionary function on the sample template file
+#' result <- getDictionary(template_path)
+#'
+#' # Insert data into the template dictionary
+#' result[1,2] <- Sys.getenv("USERNAME") #Author name
+#' result[2,2] <- as.character(Sys.Date()) # Date report created
+#' result[3,2] <- 123
+#' result[4,2] <- 456
+#' result[5,2] <- 789
+#' result[6,2] <- sum(as.numeric(result[3:5,2]))
+#'
+#' # Verify that the result dictionary is valid
+#' if (checkDictionary(result) == TRUE) {
+#'   docket(template_path, result, output_path)
+#'   if (file.exists(output_path)) {
+#'      print("Docket Successfully Created")
+#'   }
+#' }
 #' @export
 docket <- function(filename, dictionary, outputName) {
   if (checkDictionary(dictionary) != TRUE){
@@ -242,6 +292,8 @@ docket <- function(filename, dictionary, outputName) {
   temp_dir <- paste0(filename, "_dockettemp") #Temp directory for holding files
 
   zipfile_xml <- open_zipfile(filename) #Creates temp file and extracts the content
+
+  on.exit(close_unzip_file(filename)) #Removes temp file
 
   docket.dictionary.private <- getPrivateDictionary(zipfile_xml) #Creates a dictionary of the private flags
 
@@ -265,8 +317,7 @@ docket <- function(filename, dictionary, outputName) {
   write_xml(as_xml_document(zipfile_xml), paste0(temp_dir, "/word/document.xml"))
 
   setwd(temp_dir)
-  zip(zipfile = outputName, files = list.files(), include_directories = FALSE)
+  zip(zipfile = outputName, files = list.files(), recurse = TRUE, include_directories = FALSE)
   setwd(old_wd)
-  close_unzip_file(filename)
 }
 
