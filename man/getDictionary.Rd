@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.r
 \name{getDictionary}
 \alias{getDictionary}
-\title{Create an empty dictionary from the flags in a document template}
+\title{Create a dictionary}
 \usage{
 getDictionary(filename)
 }
@@ -10,12 +10,19 @@ getDictionary(filename)
 \item{filename}{The file path to the document template. Supports .doc and .docx}
 }
 \value{
-A two-column data frame intended for populating data into the template:
-\itemize{
-\item \strong{flag}: Lists all the flags identified in the document.
-\item \strong{replace values}: An empty column where users can insert values to replace the corresponding flags in the template.
-}
+A data frame where each row represents a flag in the template document and its replacement value
 }
 \description{
-Scans the input file for strings enclosed by flag wings: « »
+Scans the input file for strings enclosed by flag wings: « », then creates an empty dictionary with corresponding
+replacement values for each flag.
+}
+\examples{
+
+# Path to the sample template file included in the package
+template_path <- system.file("template_document", "Template.docx", package="docket")
+
+# Create a dictionary by using the getDictionary function on the sample template file
+result <- getDictionary(template_path)
+print(result)
+
 }

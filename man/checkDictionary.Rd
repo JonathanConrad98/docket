@@ -7,16 +7,36 @@
 checkDictionary(dictionary)
 }
 \arguments{
-\item{dictionary}{A data frame intended for feeding into the template. It should be structured according to the described conditions}
+\item{dictionary}{A data frame where each row represents a flag in the template document and its replacement value}
 }
 \value{
-Logical. Returns 'TRUE' if the dictionary meets requirements for processing. Returns false otherwise
+Logical. Returns 'TRUE' if the dictionary meets requirements for processing. Returns 'FALSE' otherwise
 }
 \description{
 Verifies that the input dictionary meets the following conditions
-\enumerate{
-\item It is a two-column dataframe
-\item Column 1 is named "flag"
-\item Column 1 contains flags without starting and ending wings: « »
+#' \itemize{
+\item \strong{1.} It is a two-column data frame
+\item \strong{2.} Column 1 is named "flag"
+\item \strong{3.} Column 1 contains flags with starting and ending wings: « »
+}
+}
+\examples{
+# Path to the sample template included in the package
+template_path <- system.file("template_document", "Template.docx", package="docket")
+
+# Create a dictionary by using the getDictionary function on the sample template file
+result <- getDictionary(template_path)
+
+# Insert data into the template dictionary
+result[1,2] <- Sys.getenv("USERNAME") #Author name
+result[2,2] <- as.character(Sys.Date()) # Date report created
+result[3,2] <- 123
+result[4,2] <- 456
+result[5,2] <- 789
+result[6,2] <- sum(as.numeric(result[3:5,2]))
+
+# Verify that the result dictionary is valid
+if (checkDictionary(result) == TRUE) {
+  print("Valid Dictionary")
 }
 }
